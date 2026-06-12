@@ -1,6 +1,6 @@
 <?php
 
-// 1. Aktifkan laporan error PHP murni ke browser
+// 1. Tampilkan error mentah jika ada kendala fatal
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -24,14 +24,19 @@ require __DIR__ . '/../vendor/autoload.php';
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 $app->useStoragePath('/tmp/storage');
 
-// 5. JEMBATAN EMAS: Daftarkan Service Provider inti secara manual agar tidak memicu "Class does not exist"
+// 5. Daftarkan Service Provider inti secara manual
 $app->register(\Illuminate\Events\EventServiceProvider::class);
 $app->register(\Illuminate\Filesystem\FilesystemServiceProvider::class);
 $app->register(\Illuminate\View\ViewServiceProvider::class);
 
-// 6. Jalankan Kernel HTTP dengan Proteksi Catch Error
+// 6. Jalankan Kernel HTTP Laravel
 try {
     $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+    // TRICK PAMUNGKAS: Paksa sistem untuk mengosongkan cache view lama yang merusak render
+    if (is_dir($storagePath . '/views')) {
+        array_map('unlink', glob("$storagePath/views/*"));
+    }
 
     $response = $kernel->handle(
         $request = Illuminate\Http\Request::capture()
@@ -42,6 +47,4 @@ try {
     echo "<h2>Laravel Core Bridge Error Terdeteksi!</h2>";
     echo "<h3>Pesan Masalah:</h3>";
     echo "<pre style='background:#fff0f0; padding:15px; border:1px solid #ffa0a0; color:red; font-size:14px;'>" . $e->getMessage() . "</pre>";
-    echo "<h3>File Sumber Kejadian:</h3>";
-    echo "<pre>" . $e->getFile() . " (Line: " . $e->getLine() . ")</pre>";
 }
