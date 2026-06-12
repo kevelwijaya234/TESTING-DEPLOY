@@ -20,5 +20,6 @@
             "src": "/(.*)",
             "dest": "/api/index.php"
         }
-    ]
+    ],
+    "pancingan": "build-ulang-ke-7"
 }
