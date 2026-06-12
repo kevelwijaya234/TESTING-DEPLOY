@@ -4,21 +4,22 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-// Determine if the application is in maintenance mode...
+// Cek apakah aplikasi sedang dalam mode perbaikan (maintenance)...
 if (file_exists($maintenance = __DIR__ . '/../storage/framework/maintenance.php')) {
     require $maintenance;
 }
 
-// Register the Auto Loader
+// Daftarkan Auto Loader Composer
 require __DIR__ . '/../vendor/autoload.php';
 
-// Bootstrap Laravel and handle the request
+// Jalankan Bootstrap Laravel
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 
-$handle = $app->make(Request::class);
+// Meminta Kernel untuk menangani Request secara benar sesuai arsitektur Laravel
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
-$response = $handle->handle(
+$response = $kernel->handle(
     $request = Request::capture()
 )->send();
 
-$handle->terminate($request, $response);
+$kernel->terminate($request, $response);
