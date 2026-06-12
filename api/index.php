@@ -18,5 +18,3 @@ try {
     echo "Migrasi GAGAL! Terjadi kesalahan:<br>";
     echo "<pre>" . $e->getMessage() . "</pre>";
 }
-
-// Perbaikan skema validasi vercel versi akhir
