@@ -1,37 +1,35 @@
 <?php
 
-// 1. Aktifkan laporan error secara detail
+// 1. Paksa sistem untuk menampilkan error secara visual di browser jika terjadi crash
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// 2. Muat autoloader Composer dan aplikasi Laravel
+// 2. Muat dependensi utama Laravel
 require __DIR__ . '/../vendor/autoload.php';
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 
-// 3. TRIK PENYELAMAT: Alihkan folder storage Laravel ke folder temporary Vercel
-$storagePath = '/tmp/storage/framework';
-if (!is_dir($storagePath . '/views')) {
-    mkdir($storagePath . '/views', 0755, true);
-    mkdir($storagePath . '/cache', 0755, true);
-    mkdir($storagePath . '/sessions', 0755, true);
-}
-$app->useStoragePath('/tmp/storage');
+// 3. Daftarkan dan jalankan Kernel Konsol (Wajib untuk Artisan)
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
-// 4. Daftarkan kernel konsol agar perintah Artisan bisa berjalan
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-
-// 5. Eksekusi migrasi database
+// 4. Eksekusi perintah migrasi menggunakan Symfony Input/Output (Sangat Stabil di Vercel)
 try {
-    echo "<h2>Proses Inisialisasi Serverless Vercel Berhasil!</h2>";
-    echo "Memulai migrasi database ke Clever Cloud...<br>";
+    echo "<h2>Koneksi Serverless Vercel: Sukses!</h2>";
+    echo "Menghubungkan ke database Clever Cloud...<br>";
+    echo "Memulai proses migrasi tabel Laravel...<br><br>";
 
-    // Memicu perintah php artisan migrate --force
-    $status = \Illuminate\Support\Facades\Artisan::call('migrate --force');
+    // Membuat objek penampung log output
+    $output = new \Symfony\Component\Console\Output\BufferedOutput;
 
-    echo "<br><b>Migrasi SELESAI!</b><br>";
-    echo "Hasil Log:<br><pre>" . \Illuminate\Support\Facades\Artisan::output() . "</pre>";
+    // Menjalankan perintah php artisan migrate --force
+    \Illuminate\Support\Facades\Artisan::call('migrate --force', [], $output);
+
+    echo "<span style='color:green; font-weight:bold;'>✔ MIGRASI SELESAI DAN BERHASIL!</span><br>";
+    echo "<h3>Log Database:</h3>";
+    echo "<pre style='background:#f4f4f4; padding:10px; border:1px solid #ddd;'>" . $output->fetch() . "</pre>";
 } catch (\Exception $e) {
-    echo "<br><b>Migrasi GAGAL! Terjadi kesalahan pada database:</b><br>";
-    echo "<pre>" . $e->getMessage() . "</pre>";
+    echo "<span style='color:red; font-weight:bold;'>❌ MIGRASI GAGAL! Terjadi kendala konfigurasi:</span><br>";
+    echo "<h3>Pesan Error:</h3>";
+    echo "<pre style='background:#fff0f0; padding:10px; border:1px solid #ffa0a0; color:red;'>" . $e->getMessage() . "</pre>";
 }
